@@ -6,10 +6,13 @@ import { Check, X, Clock3, Flame, Star } from "lucide-react";
 import { useState } from "react";
 import { usePlan } from "@/context/PlanContext";
 
+type SortOption = "duration" | "calories" | "rating";
+
 const MyPlanPage = () => {
   const { plan, saved, removeFromPlan, removeSaved } = usePlan();
 
   const [activeTab, setActiveTab] = useState<"plan" | "saved">("plan");
+  const [sortBy, setSortBy] = useState<SortOption>("duration");
   const [doneWorkouts, setDoneWorkouts] = useState<number[]>([]);
   const [toast, setToast] = useState("");
 
@@ -24,6 +27,18 @@ const MyPlanPage = () => {
   );
 
   const currentWorkouts = activeTab === "plan" ? plan : saved;
+
+  const sortedWorkouts = [...currentWorkouts].sort((a, b) => {
+    if (sortBy === "duration") {
+      return a.duration - b.duration;
+    }
+
+    if (sortBy === "calories") {
+      return b.caloriesBurned - a.caloriesBurned;
+    }
+
+    return b.rating - a.rating;
+  });
 
   const showToast = (message: string) => {
     setToast(message);
@@ -104,6 +119,41 @@ const MyPlanPage = () => {
           </button>
         </div>
 
+        {/* Sort */}
+        {currentWorkouts.length > 0 && (
+          <div className="mt-6 flex justify-end">
+            <div className="flex h-10 items-center gap-2 rounded-md border border-white/[0.1] bg-[#17181B] px-3">
+              <label
+                htmlFor="sort"
+                className="whitespace-nowrap text-[10px] font-bold uppercase tracking-wide text-[#9A9CA2]"
+              >
+                Sort By
+              </label>
+
+              <select
+                id="sort"
+                value={sortBy}
+                onChange={(event) =>
+                  setSortBy(event.target.value as SortOption)
+                }
+                className="bg-transparent text-xs font-semibold text-white outline-none"
+              >
+                <option className="bg-black text-white" value="duration">
+                  Duration
+                </option>
+
+                <option className="bg-black text-white" value="calories">
+                  Calories
+                </option>
+
+                <option className="bg-black text-white" value="rating">
+                  Rating
+                </option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* Empty State */}
         {currentWorkouts.length === 0 ? (
           <div className="flex min-h-[420px] flex-col items-center justify-center text-center">
@@ -124,7 +174,7 @@ const MyPlanPage = () => {
           </div>
         ) : (
           <div className="mt-8 grid gap-4">
-            {currentWorkouts.map((workout) => {
+            {sortedWorkouts.map((workout) => {
               const isDone = doneWorkouts.includes(workout.id);
 
               return (
